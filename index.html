@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskRain BD - Professional Earn App</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src='//libtl.com/sdk.js' data-zone='10981207' data-sdk='show_10981207'></script>
+    
+    <style>
+        :root { --primary: #1c2a35; --card: #243447; --accent: #ffd700; --blue: #0088cc; --success: #27ae60; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--primary); color: white; margin: 0; padding: 15px; text-align: center; }
+        .card { background: var(--card); border-radius: 15px; padding: 20px; margin-bottom: 15px; border: 1px solid #34495e; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .balance { font-size: 32px; color: var(--accent); font-weight: bold; margin: 10px 0; }
+        .btn { background: var(--blue); border: none; color: white; padding: 14px; border-radius: 12px; cursor: pointer; font-weight: bold; width: 100%; font-size: 16px; transition: 0.3s; margin-top: 5px; }
+        .btn:active { transform: scale(0.95); }
+        
+        /* উন্নত রেফারেল কার্ড স্টাইল */
+        .refer-box { background: #fdf2e9; color: #333; border-radius: 15px; padding: 15px; text-align: left; border-left: 5px solid #e67e22; margin-bottom: 15px; }
+        .refer-title { font-weight: bold; font-size: 16px; color: #d35400; display: flex; align-items: center; gap: 8px; }
+        .refer-link-area { display: flex; gap: 8px; margin-top: 12px; }
+        .refer-input { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #ddd; background: #fff; font-size: 12px; color: #555; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+        .copy-btn { background: var(--blue); color: white; border: none; padding: 0 15px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; }
+
+        /* লিডারবোর্ড */
+        .leader-item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #34495e; font-size: 14px; }
+        .rank { color: var(--accent); font-weight: bold; margin-right: 10px; }
+        
+        input[type="number"], select { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 1px solid #34495e; background: #1c2a35; color: white; box-sizing: border-box; }
+        #loading-ad { display: none; color: var(--accent); margin: 8px 0; font-size: 13px; font-weight: bold; }
+        .footer-links { display: flex; justify-content: space-around; font-size: 12px; margin-top: 20px; }
+        .footer-links a { color: #00aaff; text-decoration: none; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h2 style="margin:0;">TaskRain BD</h2>
+        <p id="user-info" style="font-size: 11px; color: #888;">লোড হচ্ছে...</p>
+        <div class="balance">৳ <span id="balance">0.00</span></div>
+        <div style="display: flex; justify-content: space-between; font-size: 13px; color: #bdc3c7;">
+            <span>অ্যাড দেখা: <b id="ad-count">0</b>/20</span>
+            <span>রেফার: <b id="ref-count">0</b></span>
+        </div>
+    </div>
+
+    <div class="card refer-box">
+        <div class="refer-title">🔥 বন্ধুকে রেফার করুন এবং ইনকাম করুন 👋</div>
+        <p style="font-size: 11px; margin: 8px 0; line-height: 1.4; color: #555;">প্রতিটি সফল রেফারে আপনি পাবেন <b>৩০.০০ টাকা</b> বোনাস! আপনার বন্ধুরা সাইন আপ করলে আপনার ব্যালেন্সে টাকা যোগ হবে।</p>
+        <div class="refer-link-area">
+            <div class="refer-input" id="refer-link-text">https://t.me/loading...</div>
+            <button class="copy-btn" onclick="copyReferLink()">কপি</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3 style="margin: 0 0 10px 0;">📹 বিজ্ঞাপন দেখে আয়</h3>
+        <div id="show_10981207" style="min-height: 100px; background: #1a252f; border-radius: 10px; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #555;">
+            বিজ্ঞাপন লোড হচ্ছে...
+        </div>
+        <button class="btn" onclick="startAdProcess()">বিজ্ঞাপন দেখুন</button>
+        <div id="loading-ad">যাচাই করা হচ্ছে... (৫ সেকেন্ড)</div>
+    </div>
+
+    <div class="card">
+        <h3 style="margin: 0 0 10px 0; color: var(--accent);">🏆 সেরা ৫ উপার্জনকারী (Live)</h3>
+        <div id="leaderboard"></div>
+    </div>
+
+    <div class="card">
+        <h3>💸 টাকা উত্তোলন</h3>
+        <select id="method">
+            <option value="Bkash">বিকাশ (Bkash)</option>
+            <option value="Nagad">নগদ (Nagad)</option>
+        </select>
+        <input type="number" id="phone" placeholder="আপনার নম্বর দিন">
+        <button class="btn" style="background: var(--success);" onclick="sendWithdraw()">উত্তোলন রিকোয়েস্ট</button>
+    </div>
+
+    <div class="footer-links">
+        <a href="https://t.me/Online_Free_Income_95">চ্যানেল</a>
+        <a href="https://t.me/Online_Free_Income_09">হেল্প সেন্টার</a>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        // আপনার বটের ইউজারনেম এখানে দিন (অবশ্যই দিন)
+        const BOT_USERNAME = "Online_Free_Income_09_bot"; 
+        const BOT_TOKEN = '8790752659:AAFW56dhcqMjoPgXQTiBKuPyHnjsjot33_E';
+        const ADMIN_ID = '8598824562';
+
+        let bal = parseFloat(localStorage.getItem('tr_bal')) || 0;
+        let ads = parseInt(localStorage.getItem('tr_ads')) || 0;
+        let refs = parseInt(localStorage.getItem('tr_refs')) || 0;
+
+        const user = tg.initDataUnsafe.user || { first_name: "Guest", id: "12345" };
+
+        function updateUI() {
+            document.getElementById('balance').innerText = bal.toFixed(2);
+            document.getElementById('ad-count').innerText = ads;
+            document.getElementById('ref-count').innerText = refs;
+            document.getElementById('user-info').innerText = `${user.first_name} (ID: ${user.id})`;
+            
+            // পার্সোনালাইজড রেফারেল লিংক জেনারেট
+            const referLink = `https://t.me/${BOT_USERNAME}?start=${user.id}`;
+            document.getElementById('refer-link-text').innerText = referLink;
+
+            localStorage.setItem('tr_bal', bal);
+            localStorage.setItem('tr_ads', ads);
+            renderLeaders();
+        }
+
+        function copyReferLink() {
+            const link = document.getElementById('refer-link-text').innerText;
+            navigator.clipboard.writeText(link);
+            tg.showAlert("✅ রেফারেল লিংক কপি হয়েছে!");
+        }
+
+        function startAdProcess() {
+            if (typeof show_10981207 === 'function') { show_10981207(); }
+            document.getElementById('loading-ad').style.display = 'block';
+            setTimeout(() => {
+                bal += 5; ads += 1;
+                updateUI();
+                document.getElementById('loading-ad').style.display = 'none';
+                tg.showPopup({ message: "অভিনন্দন! ৫ টাকা যোগ হয়েছে।" });
+            }, 5000);
+        }
+
+        function renderLeaders() {
+            const data = [
+                {n: "Sujon", e: 5400}, {n: "Mitu", e: 3200}, {n: user.first_name, e: bal}, {n: "Rakib", e: 1100}
+            ].sort((a,b)=>b.e-a.e);
+            let h = '';
+            data.forEach((l, i) => {
+                h += `<div class="leader-item"><span><span class="rank">#${i+1}</span> ${l.n}</span><span>৳${l.e.toFixed(2)}</span></div>`;
+            });
+            document.getElementById('leaderboard').innerHTML = h;
+        }
+
+        async function sendWithdraw() {
+            const m = document.getElementById('method').value;
+            const p = document.getElementById('phone').value;
+            if (bal < 1500) return tg.showAlert("⚠️ উত্তোলনের জন্য ১৫০০ টাকা প্রয়োজন!");
+            if (p.length < 11) return tg.showAlert("⚠️ সঠিক নম্বর দিন!");
+
+            const msg = `💰 **উইথড্র রিকোয়েস্ট!**\n\n👤 ইউজার: ${user.first_name}\n🆔 আইডি: ${user.id}\n📱 মেথড: ${m}\n📞 নম্বর: ${p}\n💵 পরিমাণ: ${bal} BDT`;
+            
+            await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({chat_id: ADMIN_ID, text: msg, parse_mode: 'Markdown'})
+            });
+
+            tg.showAlert("✅ রিকোয়েস্ট পাঠানো হয়েছে!");
+            bal = 0; updateUI();
+        }
+
+        tg.expand();
+        updateUI();
+    </script>
+</body>
+</html>
